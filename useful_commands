@@ -1,0 +1,32 @@
+current testnet contract owner
+whitelisthonkai.testnet
+
+current guardians
+calmhare3618.testnet
+thicktag6290.testnet
+dulljaguar9474.testnet
+
+near create-account whitelisthonkai.testnet --useFaucet --networkId testnet
+
+near deploy whitelisthonkai.testnet <route-to-wasm>
+
+near call "whitelisthonkai.testnet" add_guardian '{"account_id":"calmhare3618.testnet"}' --accountId "whitelisthonkai.testnet"
+near call "whitelisthonkai.testnet" add_guardian '{"account_id":"thicktag6290.testnet"}' --accountId "whitelisthonkai.testnet"
+near call "whitelisthonkai.testnet" add_guardian '{"account_id":"dulljaguar9474.testnet"}' --accountId "whitelisthonkai.testnet"
+
+near call "whitelisthonkai.testnet" add_project '{"contract_ids":["wukong.near"]}' --accountId "calmhare3618.testnet" --deposit 1
+
+near call "whitelisthonkai.testnet" vote_proposal '{"proposal_id":"17243915836"}' --accountId "calmhare3618.testnet"
+near call "whitelisthonkai.testnet" vote_proposal '{"proposal_id":"17243915836"}' --accountId "thicktag6290.testnet"
+near call "whitelisthonkai.testnet" vote_proposal '{"proposal_id":"17243915836"}' --accountId "dulljaguar9474.testnet"
+
+
+near call "whitelisthonkai.testnet" withdraw_vote_on_proposal '{"proposal_id":"17242300041"}' --accountId "calmhare3618.testnet"
+
+
+near call "whitelisthonkai.testnet" update_project '{"contract_ids":["genshinimpact.near"],"description":"bye bye","project_id":"17243915185"}' --accountId "calmhare3618.testnet" --deposit 1
+
+near call "whitelisthonkai.testnet" migrate --accountId "whitelisthonkai.testnet"
+
+
+near view "whitelisthonkai.testnet" list_contracts '{"limit":0,"from_index":0}'
