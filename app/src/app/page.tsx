@@ -14,6 +14,7 @@ import {
   Menu,
   Text,
   Title,
+  useComputedColorScheme,
   useMantineColorScheme,
 } from "@mantine/core";
 import { useAtom } from "jotai";
@@ -30,11 +31,17 @@ import Contracts from "@/components/Contracts";
 import { useState } from "react";
 import { whitelistQueries } from "@/hooks/whitelistQueries";
 import { notifications } from "@mantine/notifications";
+import classes from './page.module.css';
 
 export default function Home() {
-  const { toggleColorScheme, colorScheme } = useMantineColorScheme({
+  const { toggleColorScheme } = useMantineColorScheme({
     keepTransitions: true,
   });
+
+  const computedColorScheme = useComputedColorScheme("dark", {
+    getInitialValueInEffect: true,
+  });
+
   const [walletSelector] = useAtom(walletSelectorAtom);
   const [isSignedIn, setIsSignedIn] = useAtom(isSignedInAtom);
   const [walletSelectorModal] = useAtom(walletSelectorModalAtom);
@@ -53,7 +60,8 @@ export default function Home() {
       <Flex direction={"column"} align={"flex-end"}>
         <Flex gap="sm" align={"center"} mt="sm">
           <ActionIcon size="lg" onClick={toggleColorScheme}>
-            {colorScheme === "dark" ? <IconSun /> : <IconMoon />}
+            <IconSun className={classes.light} />
+            <IconMoon className={classes.dark} />
           </ActionIcon>
           <Menu shadow="md">
             <Menu.Target>
