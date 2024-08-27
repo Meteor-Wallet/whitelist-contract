@@ -87,7 +87,7 @@ const SimpleForm = ({
           <Text w={40}>Old: </Text>
           {oldProjectInfo.contract_ids.map((v) => {
             return (
-              <Badge tt={"none"} color="gray">
+              <Badge tt={"none"} color="gray" key={v}>
                 {v}
               </Badge>
             );
@@ -97,7 +97,7 @@ const SimpleForm = ({
           <Text w={40}>New: </Text>
           {newProjectInfo.contract_ids.map((v) => {
             return (
-              <Badge tt={"none"} color="gray">
+              <Badge tt={"none"} color="gray" key={v}>
                 {v}
               </Badge>
             );

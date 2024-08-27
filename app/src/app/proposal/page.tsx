@@ -4,15 +4,10 @@ import { whitelistQueries } from "@/hooks/whitelistQueries";
 import { whitelistMutate } from "../../hooks/whitelistMutate";
 import { EProjectKind, IProjectInfo } from "../../types/whitelist.types";
 import { Button, Flex, Input, Loader, TagsInput, Text } from "@mantine/core";
-import {
-  redirect,
-  RedirectType,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
-export default function ProposalPage() {
+const ProposalForm = () => {
   const searchParams = useSearchParams();
   const kind = searchParams.get("kind") as EProjectKind | null;
   const projectId = searchParams.get("project_id");
@@ -37,8 +32,8 @@ export default function ProposalPage() {
     projectId: projectId ?? undefined,
   });
 
-  const addProject = whitelistMutate.addProject();
-  const updateProject = whitelistMutate.updateProject();
+  const addProject = whitelistMutate.useAddProject();
+  const updateProject = whitelistMutate.useUpdateProject();
 
   useEffect(() => {
     if (!isUpdateFormInit.current) {
@@ -48,9 +43,8 @@ export default function ProposalPage() {
       }
     }
   }, [type, oldProjectInfo]);
-
   return (
-    <div>
+    <>
       <Flex gap="sm" align={"center"}>
         <Text size="xl" variant="gradient">
           {type === "update" ? "Update project" : "Add project"}
@@ -157,6 +151,16 @@ export default function ProposalPage() {
       >
         {type === "new" ? "Add Project" : "Update Project"}
       </Button>
+    </>
+  );
+};
+
+export default function ProposalPage() {
+  return (
+    <div>
+      <Suspense>
+        <ProposalForm />
+      </Suspense>
     </div>
   );
 }

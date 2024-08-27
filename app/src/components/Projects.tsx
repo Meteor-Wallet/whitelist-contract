@@ -85,7 +85,7 @@ export default function Projects() {
           };
 
           return (
-            <Card shadow="sm" padding="xs" withBorder radius={"md"}>
+            <Card shadow="sm" padding="xs" withBorder radius={"md"} key={project_id}>
               <Group justify="space-between">
                 <Text fw={500}>{project_id}</Text>
               </Group>
@@ -97,7 +97,7 @@ export default function Projects() {
                 <HoverCard.Target>
                   <List size="sm">
                     {project_info.contract_ids.slice(0, 2).map((v) => {
-                      return <List.Item>{v}</List.Item>;
+                      return <List.Item key={v}>{v}</List.Item>;
                     })}
                     {project_info.contract_ids.length > 2 && (
                       <List.Item>more...</List.Item>
@@ -109,7 +109,7 @@ export default function Projects() {
                   <Text>All contract ID</Text>
                   <List size="sm">
                     {project_info.contract_ids.map((v) => {
-                      return <List.Item>{v}</List.Item>;
+                      return <List.Item key={`modal-${v}`}>{v}</List.Item>;
                     })}
                   </List>
                 </HoverCard.Dropdown>

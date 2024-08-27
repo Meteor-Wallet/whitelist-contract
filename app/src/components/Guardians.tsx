@@ -19,6 +19,7 @@ export default function Guardians() {
           {guardians.data?.map((v) => {
             return (
               <Badge
+                key={v}
                 tt={"none"}
                 size="lg"
                 variant="gradient"

@@ -43,8 +43,8 @@ function ProposalCard({
   compare: () => void;
   isOneOfGuardians: boolean;
 }) {
-  const voteProposal = whitelistMutate.voteProposal();
-  const withdrawVote = whitelistMutate.withdrawVoteOnProposal();
+  const voteProposal = whitelistMutate.useVoteProposal();
+  const withdrawVote = whitelistMutate.useWithdrawVoteOnProposal();
 
   const { project_info } = proposalInfo;
   const openInNewTab = (url: string) => {
@@ -65,7 +65,7 @@ function ProposalCard({
         <HoverCard.Target>
           <List size="sm">
             {project_info.contract_ids.slice(0, 2).map((v) => {
-              return <List.Item>{v}</List.Item>;
+              return <List.Item key={v}>{v}</List.Item>;
             })}
             {project_info.contract_ids.length > 2 && (
               <List.Item>more...</List.Item>
@@ -77,7 +77,7 @@ function ProposalCard({
           <Text>All contract ID</Text>
           <List size="sm">
             {project_info.contract_ids.map((v) => {
-              return <List.Item>{v}</List.Item>;
+              return <List.Item key={`modal-${v}`}>{v}</List.Item>;
             })}
           </List>
         </HoverCard.Dropdown>
@@ -242,6 +242,7 @@ export default function Proposals() {
           {proposals.data?.map(([proposal_id, proposal_info]) => {
             return (
               <ProposalCard
+                key={proposal_id}
                 isOneOfGuardians={isOneOfGuardians}
                 proposalId={proposal_id}
                 proposalInfo={proposal_info}

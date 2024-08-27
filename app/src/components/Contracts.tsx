@@ -49,6 +49,7 @@ export default function Contracts() {
               tt={"none"}
               size="lg"
               variant="gradient"
+              key={contract_id}
               gradient={{ from: "blue", to: "cyan", deg: 90 }}
             >
               {contract_id}

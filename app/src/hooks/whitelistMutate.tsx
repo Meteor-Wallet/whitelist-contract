@@ -8,7 +8,7 @@ import { browserQueryClient } from "../providers/QueryProvider";
 import { IProjectInfo } from "@/types/whitelist.types";
 import { notifications } from "@mantine/notifications";
 
-const voteProposal = () => {
+const useVoteProposal = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
   const network = useAtomValue(nearNetworkAtom);
 
@@ -61,7 +61,7 @@ const voteProposal = () => {
   });
 };
 
-const withdrawVoteOnProposal = () => {
+const useWithdrawVoteOnProposal = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
   const network = useAtomValue(nearNetworkAtom);
 
@@ -108,7 +108,7 @@ const withdrawVoteOnProposal = () => {
   });
 };
 
-const addProject = () => {
+const useAddProject = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
   const network = useAtomValue(nearNetworkAtom);
 
@@ -155,7 +155,7 @@ const addProject = () => {
   });
 };
 
-const updateProject = () => {
+const useUpdateProject = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
   const network = useAtomValue(nearNetworkAtom);
 
@@ -210,8 +210,8 @@ const updateProject = () => {
 };
 
 export const whitelistMutate = {
-  voteProposal,
-  withdrawVoteOnProposal,
-  addProject,
-  updateProject,
+  useVoteProposal,
+  useWithdrawVoteOnProposal,
+  useAddProject,
+  useUpdateProject,
 };
