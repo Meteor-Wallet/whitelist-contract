@@ -332,6 +332,7 @@ impl Contract {
     pub fn list_projects(&self, from_index: i32, limit: i32) -> Vec<(&String, &ProjectInfo)> {
         self.approved_projects
             .iter()
+            .rev()
             .skip(from_index as usize)
             .take(limit as usize)
             .collect()
@@ -340,6 +341,7 @@ impl Contract {
     pub fn list_proposals(&self, from_index: i32, limit: i32) -> Vec<(&String, &ProposalInfo)> {
         self.proposals
             .iter()
+            .rev()
             .skip(from_index as usize)
             .take(limit as usize)
             .collect()
@@ -348,8 +350,13 @@ impl Contract {
     pub fn list_contracts(&self, from_index: i32, limit: i32) -> Vec<(&AccountId, &u32)> {
         self.approved_contracts
             .iter()
+            .rev()
             .skip(from_index as usize)
             .take(limit as usize)
             .collect()
+    }
+
+    pub fn get_project_by_id(&self, project_id: String) -> Option<&ProjectInfo> {
+        self.approved_projects.get(&project_id)
     }
 }
