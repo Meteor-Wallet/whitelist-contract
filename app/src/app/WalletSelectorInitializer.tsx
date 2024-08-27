@@ -23,9 +23,8 @@ export default function WalletSelectorInitializer() {
 
   const init = useCallback(async () => {
     const selector = await setupWalletSelector({
-      network: "testnet",
+      network: network,
       modules: [setupMeteorWallet()],
-      
     });
     setWalletSelector(selector);
     setIsSignedIn(selector.isSignedIn);
