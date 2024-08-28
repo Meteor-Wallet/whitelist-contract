@@ -1,7 +1,7 @@
 import { atomWithStorage } from "jotai/utils";
-import { ENearNetwork } from "../constant/queryKeys";
+import { ENearNetwork } from "@/constant/nearConstant";
 
 export const nearNetworkAtom = atomWithStorage<ENearNetwork>(
-  "near_network",
-  ENearNetwork.testnet
+  "meteor_near_network",
+  ENearNetwork.mainnet
 );

@@ -1,5 +1,6 @@
 import { utils } from "near-api-js";
-import { CONTRACT_ID_BY_NETWORK, EQueryKeys } from "../constant/queryKeys";
+import { EQueryKeys } from "../constant/queryKeys";
+import { CONTRACT_ID_BY_NETWORK } from "@/constant/nearConstant";
 import { nearNetworkAtom } from "../jotai/near.jotai";
 import { walletSelectorAtom } from "../jotai/wallet.jotai";
 import { useMutation } from "@tanstack/react-query";

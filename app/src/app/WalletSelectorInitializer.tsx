@@ -1,6 +1,6 @@
 "use client";
 
-import { CONTRACT_ID_BY_NETWORK } from "../constant/queryKeys";
+import { CONTRACT_ID_BY_NETWORK } from "@/constant/nearConstant";
 import { nearNetworkAtom } from "../jotai/near.jotai";
 import {
   isSignedInAtom,

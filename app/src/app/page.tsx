@@ -21,7 +21,7 @@ import { useAtom } from "jotai";
 
 import Link from "next/link";
 import { nearNetworkAtom } from "@/jotai/near.jotai";
-import { ENearNetwork } from "@/constant/queryKeys";
+import { ENearNetwork } from "@/constant/nearConstant";
 import Guardians from "@/components/Guardians";
 
 import Projects from "@/components/Projects";
@@ -63,7 +63,7 @@ export default function Home() {
             <IconSun className={classes.light} />
             <IconMoon className={classes.dark} />
           </ActionIcon>
-          <Menu shadow="md">
+          {/* <Menu shadow="md">
             <Menu.Target>
               <ActionIcon size="lg">
                 <IconWifi />
@@ -86,7 +86,7 @@ export default function Home() {
                 Testnet
               </Menu.Item>
             </Menu.Dropdown>
-          </Menu>
+          </Menu> */}
 
           <Button
             onClick={async () => {
