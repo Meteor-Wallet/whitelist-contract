@@ -8,11 +8,11 @@ import {
   UndefinedInitialDataOptions,
   useQuery,
 } from "@tanstack/react-query";
-import { nearNetworkAtom } from "../jotai/near.jotai";
+import { CURRENT_NEAR_NETWORK } from "@/constant/nearConstant";
 import { IProjectInfo, IProposal } from "@/types/whitelist.types";
 
 const useGuardians = () => {
-  const network = useAtomValue(nearNetworkAtom);
+  const network = CURRENT_NEAR_NETWORK;
 
   return useQuery({
     queryKey: [EQueryKeys.GUARDIANS, { network }],
@@ -38,7 +38,7 @@ const useApprovedProjects = ({
   limit: number;
   fromIndex: number;
 }) => {
-  const network = useAtomValue(nearNetworkAtom);
+  const network = CURRENT_NEAR_NETWORK;
 
   return useQuery({
     queryKey: [EQueryKeys.APPROVED_PROJECTS, { limit, fromIndex, network }],
@@ -69,7 +69,7 @@ const useApprovedContracts = ({
   limit: number;
   fromIndex: number;
 }) => {
-  const network = useAtomValue(nearNetworkAtom);
+  const network = CURRENT_NEAR_NETWORK;
 
   return useQuery({
     queryKey: [EQueryKeys.APPROVED_CONTRACTS, { limit, fromIndex, network }],
@@ -100,7 +100,7 @@ const useProposals = ({
   limit: number;
   fromIndex: number;
 }) => {
-  const network = useAtomValue(nearNetworkAtom);
+  const network = CURRENT_NEAR_NETWORK;
 
   return useQuery({
     queryKey: [EQueryKeys.PROPOSALS, { limit, fromIndex, network }],
@@ -131,7 +131,7 @@ const useProjectById = ({
   projectId?: string;
   enabled?: boolean;
 }) => {
-  const network = useAtomValue(nearNetworkAtom);
+  const network = CURRENT_NEAR_NETWORK;
 
   return useQuery({
     queryKey: [EQueryKeys.APPROVED_PROJECTS, { projectId, network }],
@@ -165,7 +165,7 @@ const useIsContractWhitelisted = ({
   contract_id: string;
   enabled?: boolean;
 }) => {
-  const network = useAtomValue(nearNetworkAtom);
+  const network = CURRENT_NEAR_NETWORK;
 
   return useQuery({
     queryKey: [EQueryKeys.CONTRACT_ID_WHITELIST, { contract_id, network }],

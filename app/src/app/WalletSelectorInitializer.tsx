@@ -1,7 +1,7 @@
 "use client";
 
 import { CONTRACT_ID_BY_NETWORK } from "@/constant/nearConstant";
-import { nearNetworkAtom } from "../jotai/near.jotai";
+import { CURRENT_NEAR_NETWORK } from "@/constant/nearConstant";
 import {
   isSignedInAtom,
   walletSelectorAtom,
@@ -19,18 +19,17 @@ export default function WalletSelectorInitializer() {
   );
   const [walletSelector, setWalletSelector] = useAtom(walletSelectorAtom);
   const [isSignedIn, setIsSignedIn] = useAtom(isSignedInAtom);
-  const network = useAtomValue(nearNetworkAtom);
 
   const init = useCallback(async () => {
     const selector = await setupWalletSelector({
-      network: network,
+      network: CURRENT_NEAR_NETWORK,
       modules: [setupMeteorWallet()],
     });
     setWalletSelector(selector);
     setIsSignedIn(selector.isSignedIn);
 
     const modal = setupModal(selector, {
-      contractId: CONTRACT_ID_BY_NETWORK[network],
+      contractId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
     });
     setWalletSelectorModal(modal);
 
@@ -38,7 +37,7 @@ export default function WalletSelectorInitializer() {
       modal,
       selector,
     };
-  }, [network]);
+  }, []);
 
   useEffect(() => {
     if (walletSelectorModal && walletSelector) {

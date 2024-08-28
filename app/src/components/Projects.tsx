@@ -25,14 +25,13 @@ import { walletSelectorAtom } from "@/jotai/wallet.jotai";
 import { useRouter } from "next/navigation";
 import { browserQueryClient } from "@/providers/QueryProvider";
 import { EQueryKeys } from "@/constant/queryKeys";
-import { nearNetworkAtom } from "@/jotai/near.jotai";
+import { CURRENT_NEAR_NETWORK } from "@/constant/nearConstant";
 
 const limit = 6;
 
 export default function Projects() {
   const router = useRouter();
   const [page, setPage] = useState(0);
-  const network = useAtomValue(nearNetworkAtom);
   const projects = whitelistQueries.useApprovedProjects({
     fromIndex: limit * page,
     limit,
@@ -181,11 +180,10 @@ export default function Projects() {
                 mt={"sm"}
                 w="100%"
                 onClick={() => {
-                  console.log(browserQueryClient);
                   browserQueryClient?.setQueryData(
                     [
                       EQueryKeys.APPROVED_PROJECTS,
-                      { projectId: project_id, network },
+                      { projectId: project_id, network: CURRENT_NEAR_NETWORK },
                     ],
                     project_info
                   );

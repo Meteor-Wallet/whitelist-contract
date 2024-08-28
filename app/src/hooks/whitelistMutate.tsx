@@ -1,7 +1,7 @@
 import { utils } from "near-api-js";
 import { EQueryKeys } from "../constant/queryKeys";
 import { CONTRACT_ID_BY_NETWORK } from "@/constant/nearConstant";
-import { nearNetworkAtom } from "../jotai/near.jotai";
+import { CURRENT_NEAR_NETWORK } from "@/constant/nearConstant";
 import { walletSelectorAtom } from "../jotai/wallet.jotai";
 import { useMutation } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
@@ -11,7 +11,6 @@ import { notifications } from "@mantine/notifications";
 
 const useVoteProposal = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
-  const network = useAtomValue(nearNetworkAtom);
 
   return useMutation({
     mutationFn: async (proposal_id: string) => {
@@ -19,7 +18,7 @@ const useVoteProposal = () => {
         const wallet = await walletSelector.wallet();
         if (wallet) {
           await wallet.signAndSendTransaction({
-            receiverId: CONTRACT_ID_BY_NETWORK[network],
+            receiverId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
             actions: [
               {
                 type: "FunctionCall",
@@ -64,7 +63,6 @@ const useVoteProposal = () => {
 
 const useWithdrawVoteOnProposal = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
-  const network = useAtomValue(nearNetworkAtom);
 
   return useMutation({
     mutationFn: async (proposal_id: string) => {
@@ -72,7 +70,7 @@ const useWithdrawVoteOnProposal = () => {
         const wallet = await walletSelector.wallet();
         if (wallet) {
           await wallet.signAndSendTransaction({
-            receiverId: CONTRACT_ID_BY_NETWORK[network],
+            receiverId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
             actions: [
               {
                 type: "FunctionCall",
@@ -111,7 +109,6 @@ const useWithdrawVoteOnProposal = () => {
 
 const useAddProject = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
-  const network = useAtomValue(nearNetworkAtom);
 
   return useMutation({
     mutationFn: async ({ project_info }: { project_info: IProjectInfo }) => {
@@ -119,7 +116,7 @@ const useAddProject = () => {
         const wallet = await walletSelector.wallet();
         if (wallet) {
           await wallet.signAndSendTransaction({
-            receiverId: CONTRACT_ID_BY_NETWORK[network],
+            receiverId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
             actions: [
               {
                 type: "FunctionCall",
@@ -158,7 +155,6 @@ const useAddProject = () => {
 
 const useUpdateProject = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
-  const network = useAtomValue(nearNetworkAtom);
 
   return useMutation({
     mutationFn: async ({
@@ -172,7 +168,7 @@ const useUpdateProject = () => {
         const wallet = await walletSelector.wallet();
         if (wallet) {
           await wallet.signAndSendTransaction({
-            receiverId: CONTRACT_ID_BY_NETWORK[network],
+            receiverId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
             actions: [
               {
                 type: "FunctionCall",

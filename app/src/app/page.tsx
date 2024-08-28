@@ -20,7 +20,7 @@ import {
 import { useAtom } from "jotai";
 
 import Link from "next/link";
-import { nearNetworkAtom } from "@/jotai/near.jotai";
+import { CURRENT_NEAR_NETWORK } from "@/constant/nearConstant";
 import { ENearNetwork } from "@/constant/nearConstant";
 import Guardians from "@/components/Guardians";
 
@@ -45,7 +45,6 @@ export default function Home() {
   const [walletSelector] = useAtom(walletSelectorAtom);
   const [isSignedIn, setIsSignedIn] = useAtom(isSignedInAtom);
   const [walletSelectorModal] = useAtom(walletSelectorModalAtom);
-  const [network, setNetwork] = useAtom(nearNetworkAtom);
 
   const [contractId, setContractId] = useState("");
 
@@ -117,7 +116,7 @@ export default function Home() {
             : "-"}
         </Text>
         <Text c="dimmed" size="sm">
-          Selected network: {network}
+          Selected network: {CURRENT_NEAR_NETWORK}
         </Text>
       </Flex>
 
