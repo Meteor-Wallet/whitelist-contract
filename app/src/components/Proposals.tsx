@@ -45,8 +45,20 @@ function ProposalCard({
 }) {
   const voteProposal = whitelistMutate.useVoteProposal();
   const withdrawVote = whitelistMutate.useWithdrawVoteOnProposal();
+  const metadataStructure = whitelistQueries.useMetadataStructure();
 
   const { project_info } = proposalInfo;
+  const metadata = JSON.parse(project_info.metadata) as {
+    [key: string]: string | string[];
+  };
+  const {
+    description,
+    website_url,
+    audit_report_url,
+    telegram_username,
+    twitter_url,
+    ...rest
+  } = metadata;
   const openInNewTab = (url: string) => {
     window.open(url, "_blank");
   };
@@ -59,7 +71,7 @@ function ProposalCard({
       </Group>
 
       <Text size="sm" c="dimmed" mb={"sm"}>
-        {project_info.description}
+        {metadata["description"]}
       </Text>
       <HoverCard shadow="md" openDelay={500}>
         <HoverCard.Target>
@@ -83,6 +95,21 @@ function ProposalCard({
         </HoverCard.Dropdown>
       </HoverCard>
 
+      {Object.entries(rest).length > 0 && (
+        <>
+          <Text mt={"sm"}>Additional metadata</Text>
+          <List size="sm">
+            {Object.entries(rest).map(([key, value]) => {
+              return (
+                <List.Item>
+                  {key}: {value}
+                </List.Item>
+              );
+            })}
+          </List>
+        </>
+      )}
+
       <Flex
         align={"flex-end"}
         justify={"flex-end"}
@@ -90,52 +117,52 @@ function ProposalCard({
         flex={1}
       >
         <Flex gap="xs" my={"xs"}>
-          {project_info.website_url && (
+          {metadata.website_url && (
             <ActionIcon
               size="lg"
               variant="subtle"
               onClick={() => {
-                if (project_info.website_url) {
-                  openInNewTab(project_info.website_url);
+                if (metadata.website_url) {
+                  openInNewTab(metadata.website_url);
                 }
               }}
             >
               <IconLink />
             </ActionIcon>
           )}
-          {project_info.audit_report_url && (
+          {metadata.audit_report_url && (
             <ActionIcon
               size="lg"
               variant="subtle"
               onClick={() => {
-                if (project_info.audit_report_url) {
-                  openInNewTab(project_info.audit_report_url);
+                if (metadata.audit_report_url) {
+                  openInNewTab(metadata.audit_report_url);
                 }
               }}
             >
               <IconMessageReport />
             </ActionIcon>
           )}
-          {project_info.telegram_username && (
+          {metadata.telegram_username && (
             <ActionIcon
               size="lg"
               variant="subtle"
               onClick={() => {
-                if (project_info.telegram_username) {
-                  openInNewTab(project_info.telegram_username);
+                if (metadata.telegram_username) {
+                  openInNewTab(metadata.telegram_username);
                 }
               }}
             >
               <IconBrandTelegram />
             </ActionIcon>
           )}
-          {project_info.twitter_url && (
+          {metadata.twitter_url && (
             <ActionIcon
               size="lg"
               variant="subtle"
               onClick={() => {
-                if (project_info.twitter_url) {
-                  openInNewTab(project_info.twitter_url);
+                if (metadata.twitter_url) {
+                  openInNewTab(metadata.twitter_url);
                 }
               }}
             >

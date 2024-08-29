@@ -175,7 +175,6 @@ impl Contract {
         if env::attached_deposit() != NearToken::from_near(1) {
             panic!("Creating proposal requires depositing 1 NEAR.")
         }
-
         serde_json::from_str::<ProjectMetadata>(&metadata).expect("Incorrect metadata structure");
 
         let (new_running_id, proposal_id) = Contract::generate_id(self.running_id);

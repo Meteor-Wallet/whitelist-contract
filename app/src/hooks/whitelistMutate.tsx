@@ -111,9 +111,10 @@ const useAddProject = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
 
   return useMutation({
-    mutationFn: async ({ project_info }: { project_info: IProjectInfo }) => {
+    mutationFn: async ({ project_info }: { project_info: Omit<IProjectInfo, 'pending_proposals'> }) => {
       if (walletSelector) {
         const wallet = await walletSelector.wallet();
+        const {contract_ids, metadata} = project_info
         if (wallet) {
           await wallet.signAndSendTransaction({
             receiverId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
@@ -123,7 +124,8 @@ const useAddProject = () => {
                 params: {
                   methodName: "add_project",
                   args: {
-                    ...project_info,
+                    contract_ids,
+                    metadata: metadata
                   },
                   gas: utils.format.parseNearAmount("0.00000000003")!,
                   deposit: utils.format.parseNearAmount("1")!,
@@ -161,7 +163,7 @@ const useUpdateProject = () => {
       project_info,
       project_id,
     }: {
-      project_info: IProjectInfo;
+      project_info: Omit<IProjectInfo, 'pending_proposals'>;
       project_id: string;
     }) => {
       if (walletSelector) {
@@ -176,7 +178,8 @@ const useUpdateProject = () => {
                   methodName: "update_project",
                   args: {
                     project_id,
-                    ...project_info,
+                    metadata: project_info.metadata,
+                    contract_ids: project_info.contract_ids,
                   },
                   gas: utils.format.parseNearAmount("0.00000000003")!,
                   deposit: utils.format.parseNearAmount("1")!,

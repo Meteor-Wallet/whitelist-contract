@@ -78,7 +78,7 @@ const useApprovedContracts = ({
         network,
       });
 
-      const outcome: [string, number][] = await near.viewFunction({
+      const outcome: [string, string][] = await near.viewFunction({
         methodName: "list_contracts",
         contractId: CONTRACT_ID_BY_NETWORK[network],
         args: {
@@ -192,6 +192,31 @@ const useIsContractWhitelisted = ({
   });
 };
 
+const useMetadataStructure = () => {
+  const network = CURRENT_NEAR_NETWORK;
+  return useQuery({
+    queryKey: [EQueryKeys.CONTRACT_ID_WHITELIST, { network }],
+    queryFn: async () => {
+      const near = await nearUtils.getNear({
+        network,
+      });
+
+      const outcome: {
+        key: string;
+        value_type: "STRING" | "ARRAY";
+        is_required: boolean;
+        label: string;
+      }[] = await near.viewFunction({
+        methodName: "get_metadata_structure",
+        contractId: CONTRACT_ID_BY_NETWORK[network],
+      });
+
+      return outcome;
+    },
+    
+  });
+};
+
 export const whitelistQueries = {
   useGuardians,
   useApprovedProjects,
@@ -199,4 +224,5 @@ export const whitelistQueries = {
   useProposals,
   useProjectById,
   useIsContractWhitelisted,
+  useMetadataStructure
 };

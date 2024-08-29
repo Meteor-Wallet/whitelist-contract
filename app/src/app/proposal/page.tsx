@@ -7,20 +7,20 @@ import { Button, Flex, Input, Loader, TagsInput, Text } from "@mantine/core";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
+interface IForm {
+  contract_ids: string[];
+  metadata: {
+    [key: string]: string | string[];
+  };
+}
+
 const ProposalForm = () => {
   const searchParams = useSearchParams();
   const kind = searchParams.get("kind") as EProjectKind | null;
   const projectId = searchParams.get("project_id");
   const router = useRouter();
 
-  const [form, setForm] = useState<IProjectInfo>({
-    description: "",
-    audit_report_url: "",
-    telegram_username: "",
-    twitter_url: "",
-    website_url: "",
-    contract_ids: [],
-  });
+  const metadataStructure = whitelistQueries.useMetadataStructure();
 
   const isUpdateFormInit = useRef(false);
 
@@ -28,89 +28,107 @@ const ProposalForm = () => {
     kind === EProjectKind.UPDATE && projectId !== null ? "update" : "new";
 
   const oldProjectInfo = whitelistQueries.useProjectById({
-    enabled: type === "update",
+    enabled: type === "update" && metadataStructure.status === "success",
     projectId: projectId ?? undefined,
   });
 
   const addProject = whitelistMutate.useAddProject();
   const updateProject = whitelistMutate.useUpdateProject();
 
+  const [form, setForm] = useState<IForm>({
+    metadata: {},
+    contract_ids: [],
+  });
+
+  useEffect(() => {
+    if (type === "new" && metadataStructure.data) {
+      setForm((s) => {
+        const tmp = { ...s };
+        metadataStructure.data.map(({ key, value_type }) => {
+          tmp.metadata[key] = value_type === "STRING" ? "" : [];
+        });
+        return tmp;
+      });
+    }
+  }, [metadataStructure.data]);
+
   useEffect(() => {
     if (!isUpdateFormInit.current) {
-      if (type === "update" && oldProjectInfo.data) {
-        setForm(oldProjectInfo.data);
+      if (type === "update" && metadataStructure.data && oldProjectInfo.data) {
+        const oldMetadata = JSON.parse(oldProjectInfo.data.metadata);
+
+        setForm((s) => {
+          const tmp = { ...s };
+          metadataStructure.data.map(({ key, value_type }) => {
+            if (oldMetadata[key]) {
+              tmp.metadata[key] = oldMetadata[key];
+            } else {
+              tmp.metadata[key] = value_type === "STRING" ? "" : [];
+            }
+          });
+          tmp.contract_ids = oldProjectInfo.data?.contract_ids!;
+          return tmp;
+        });
         isUpdateFormInit.current = true;
       }
     }
-  }, [type, oldProjectInfo]);
+  }, [type, oldProjectInfo.data, metadataStructure.data]);
+
+  console.log(form);
+
   return (
     <>
       <Flex gap="sm" align={"center"}>
         <Text size="xl" variant="gradient">
           {type === "update" ? "Update project" : "Add project"}
         </Text>
-        {oldProjectInfo.isFetching && <Loader size="sm" />}
+        {(oldProjectInfo.isFetching || metadataStructure.isFetching) && (
+          <Loader size="sm" />
+        )}
       </Flex>
       {type === "update" && projectId && (
         <Input.Wrapper label="Project ID">
           <Input value={projectId} disabled />
         </Input.Wrapper>
       )}
-      <Input.Wrapper label="Audit report URL">
-        <Input
-          value={form.audit_report_url ?? ""}
-          onChange={(e) =>
-            setForm((s) => ({
-              ...s,
-              audit_report_url: e.target.value,
-            }))
+      {metadataStructure.data &&
+        metadataStructure.data.map((structure) => {
+          if (structure.value_type === "ARRAY") {
+            let value = form.metadata[structure.key];
+            if (typeof value === "string") {
+              value = [];
+            }
+            return (
+              <TagsInput
+                label={structure.label}
+                data={[]}
+                value={value}
+                onChange={(e) => {
+                  setForm((s) => {
+                    const tmp = { ...s };
+                    tmp.metadata[structure.key] = e;
+                    return tmp;
+                  });
+                }}
+              />
+            );
           }
-        />
-      </Input.Wrapper>
-      <Input.Wrapper label="Project Description">
-        <Input
-          value={form.description ?? ""}
-          onChange={(e) =>
-            setForm((s) => ({
-              ...s,
-              description: e.target.value,
-            }))
-          }
-        />
-      </Input.Wrapper>
-      <Input.Wrapper label="Telegram Username">
-        <Input
-          value={form.telegram_username ?? ""}
-          onChange={(e) =>
-            setForm((s) => ({
-              ...s,
-              telegram_username: e.target.value,
-            }))
-          }
-        />
-      </Input.Wrapper>
-      <Input.Wrapper label="Twitter URL">
-        <Input
-          value={form.twitter_url ?? ""}
-          onChange={(e) =>
-            setForm((s) => ({
-              ...s,
-              twitter_url: e.target.value,
-            }))
-          }
-        />
-      </Input.Wrapper>
-      <Input.Wrapper label="Website URL">
-        <Input
-          value={form.website_url ?? ""}
-          onChange={(e) =>
-            setForm((s) => ({
-              ...s,
-              website_url: e.target.value,
-            }))
-          }
-        />
-      </Input.Wrapper>
+          return (
+            <Input.Wrapper label={structure.label}>
+              <Input
+                value={form.metadata[structure.key] ?? ""}
+                onChange={(e) =>
+                  setForm((s) => {
+                    const tmp = { ...s };
+                    tmp.metadata[structure.key] = e.target.value;
+                    return tmp;
+                  })
+                }
+              />
+            </Input.Wrapper>
+          );
+        })}
+
       <TagsInput
         label="Contract IDs (Enter to submit a contract ID)"
         placeholder="Enter contract ID"
@@ -132,13 +150,19 @@ const ProposalForm = () => {
           try {
             if (type === "new") {
               await addProject.mutateAsync({
-                project_info: form,
+                project_info: {
+                  contract_ids: form.contract_ids,
+                  metadata: JSON.stringify(form.metadata),
+                },
               });
             } else {
               if (projectId) {
                 await updateProject.mutateAsync({
                   project_id: projectId,
-                  project_info: form,
+                  project_info: {
+                    contract_ids: form.contract_ids,
+                    metadata: JSON.stringify(form.metadata),
+                  },
                 });
               }
             }
