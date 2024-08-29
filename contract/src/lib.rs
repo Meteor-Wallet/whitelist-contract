@@ -194,7 +194,7 @@ impl Contract {
 
         let proposal = ProposalInfo {
             project_info: ProjectInfo {
-                contract_ids,
+                contract_ids: contract_ids.clone(),
                 metadata,
                 pending_proposals: HashSet::new(),
                 project_id
@@ -208,6 +208,12 @@ impl Contract {
         if self.proposals.contains_key(&proposal_id) {
             panic!("id collision, please try again later");
         } else {
+            for contract_id in contract_ids.iter() {
+                if self.contract_project_index.contains_key(&contract_id.clone()) {
+                    let associated_project_id = self.contract_project_index.get(&contract_id.clone())?;
+                    panic!("{} is associated with project {} already.", contract_id.clone(), associated_project_id.clone())
+                }
+            }
             self.proposals.insert(proposal_id.clone(), proposal);
             Option::from(proposal_id)
         }
