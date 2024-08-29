@@ -25,13 +25,13 @@ import { ENearNetwork } from "@/constant/nearConstant";
 import Guardians from "@/components/Guardians";
 
 import Projects from "@/components/Projects";
-import Proposals from "@/components/Proposals";
+import Proposals from "@/components/proposal/Proposals";
 import { IconMoon, IconSun, IconWifi } from "@tabler/icons-react";
 import Contracts from "@/components/Contracts";
 import { useState } from "react";
 import { whitelistQueries } from "@/hooks/whitelistQueries";
 import { notifications } from "@mantine/notifications";
-import classes from './page.module.css';
+import classes from "./page.module.css";
 
 export default function Home() {
   const { toggleColorScheme } = useMantineColorScheme({
@@ -47,11 +47,32 @@ export default function Home() {
   const [walletSelectorModal] = useAtom(walletSelectorModalAtom);
 
   const [contractId, setContractId] = useState("");
+  const [associatedProjectId, setAssociatedProjectId] = useState("");
 
   const isContractWhitelisted = whitelistQueries.useIsContractWhitelisted({
     contract_id: contractId,
     enabled: false,
   });
+
+  const projectIdByContractId = whitelistQueries.useProjectIdByContractId({
+    enabled: false,
+    contract_id: contractId,
+  });
+
+  const checkContractId = async () => {
+    const payload = await isContractWhitelisted.refetch();
+    notifications.show({
+      message: payload.data
+        ? `${contractId} is whitelisted`
+        : `${contractId} is not whitelisted`,
+      color: payload.data ? "green" : "red",
+    });
+
+    const projectIdPayload = await projectIdByContractId.refetch();
+    if (projectIdPayload.data) {
+      setAssociatedProjectId(projectIdPayload.data);
+    }
+  };
 
   return (
     <>
@@ -142,26 +163,32 @@ export default function Home() {
 
       <Text mt={"sm"}>Whitelist Checker</Text>
       <Flex gap="sm" align={"flex-end"}>
-        <Input.Wrapper label="Telegram Username">
+        <Input.Wrapper label="Contract ID">
           <Input
             value={contractId}
             onChange={(e) => setContractId(e.target.value)}
+            onKeyDown={(e) => {
+              setAssociatedProjectId("");
+              if (e.key === "Enter") {
+                checkContractId();
+              }
+            }}
           />
         </Input.Wrapper>
         <Button
           loading={isContractWhitelisted.isFetching}
-          onClick={async () => {
-            const payload = await isContractWhitelisted.refetch();
-            notifications.show({
-              message: payload.data
-                ? `${contractId} is whitelisted`
-                : `${contractId} is not whitelisted`,
-              color: payload.data ? "green" : "red",
-            });
-          }}
+          onClick={checkContractId}
         >
           Check
         </Button>
+      </Flex>
+      <Flex align={"center"}>
+        <Text>Associated Project ID:</Text>
+        {associatedProjectId && (
+          <Link href={`/project?project_id=${associatedProjectId}`}>
+            <Button variant="transparent">{associatedProjectId}</Button>
+          </Link>
+        )}
       </Flex>
     </>
   );

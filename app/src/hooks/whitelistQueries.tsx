@@ -128,18 +128,14 @@ const useProjectById = ({
   projectId,
   enabled,
 }: {
-  projectId?: string;
+  projectId: string;
   enabled?: boolean;
 }) => {
   const network = CURRENT_NEAR_NETWORK;
 
   return useQuery({
-    queryKey: [EQueryKeys.APPROVED_PROJECTS, { projectId, network }],
+    queryKey: [EQueryKeys.APPROVED_PROJECTS_BY_ID, { projectId, network }],
     queryFn: async () => {
-      if (!projectId) {
-        return undefined;
-      }
-
       const near = await nearUtils.getNear({
         network,
       });
@@ -213,9 +209,53 @@ const useMetadataStructure = () => {
 
       return outcome;
     },
-    
   });
 };
+
+const useProposalById = (proposalId: string) => {
+  const network = CURRENT_NEAR_NETWORK;
+  return useQuery({
+    queryKey: [EQueryKeys.PROPOSAL_BY_ID, { network, proposalId }],
+    queryFn: async () => {
+      const near = await nearUtils.getNear({
+        network,
+      });
+
+      const outcome: IProposal | undefined = await near.viewFunction({
+        methodName: "get_proposal_by_id",
+        contractId: CONTRACT_ID_BY_NETWORK[network],
+        args: {
+          proposal_id: proposalId
+        }
+      });
+      
+      return outcome;
+    },
+  });
+};
+
+const useProjectIdByContractId = ({contract_id, enabled}: {contract_id: string, enabled?: boolean}) => {
+  const network = CURRENT_NEAR_NETWORK;
+  return useQuery({
+    queryKey: [EQueryKeys.PROJECT_ID_BY_CONTRACT_ID, { network, contract_id }],
+    queryFn: async () => {
+      const near = await nearUtils.getNear({
+        network,
+      });
+
+      const outcome: string | undefined = await near.viewFunction({
+        methodName: "get_project_id_by_contract_id",
+        contractId: CONTRACT_ID_BY_NETWORK[network],
+        args: {
+          contract_id
+        }
+      });
+      
+      return outcome;
+    },
+    enabled
+  });
+}
 
 export const whitelistQueries = {
   useGuardians,
@@ -224,5 +264,7 @@ export const whitelistQueries = {
   useProposals,
   useProjectById,
   useIsContractWhitelisted,
-  useMetadataStructure
+  useMetadataStructure,
+  useProposalById,
+  useProjectIdByContractId
 };

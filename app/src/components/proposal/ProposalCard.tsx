@@ -1,18 +1,14 @@
-import { whitelistQueries } from "@/hooks/whitelistQueries";
-import TableLayout from "./TableLayout";
-import { useState } from "react";
+import { whitelistMutate } from "@/hooks/whitelistMutate";
+import { EProjectKind, IProposal } from "@/types/whitelist.types";
 import {
   ActionIcon,
   Badge,
   Button,
   Card,
   Flex,
-  Grid,
   Group,
   HoverCard,
   List,
-  SimpleGrid,
-  Skeleton,
   Text,
 } from "@mantine/core";
 import {
@@ -21,16 +17,8 @@ import {
   IconLink,
   IconMessageReport,
 } from "@tabler/icons-react";
-import { whitelistMutate } from "@/hooks/whitelistMutate";
-import { useAtomValue } from "jotai";
-import { walletSelectorAtom } from "@/jotai/wallet.jotai";
-import { EProjectKind, IProjectInfo, IProposal } from "@/types/whitelist.types";
-import ComparisonModal from "./ComparisonModal";
-import { useDisclosure } from "@mantine/hooks";
 
-const limit = 6;
-
-function ProposalCard({
+export default function ProposalCard({
   proposalId,
   proposalInfo,
   currentWalletId,
@@ -45,7 +33,6 @@ function ProposalCard({
 }) {
   const voteProposal = whitelistMutate.useVoteProposal();
   const withdrawVote = whitelistMutate.useWithdrawVoteOnProposal();
-  const metadataStructure = whitelistQueries.useMetadataStructure();
 
   const { project_info } = proposalInfo;
   const metadata = JSON.parse(project_info.metadata) as {
@@ -123,7 +110,11 @@ function ProposalCard({
               variant="subtle"
               onClick={() => {
                 if (metadata.website_url) {
-                  openInNewTab(metadata.website_url);
+                  openInNewTab(
+                    typeof metadata.website_url === "string"
+                      ? metadata.website_url
+                      : ""
+                  );
                 }
               }}
             >
@@ -136,7 +127,11 @@ function ProposalCard({
               variant="subtle"
               onClick={() => {
                 if (metadata.audit_report_url) {
-                  openInNewTab(metadata.audit_report_url);
+                  openInNewTab(
+                    typeof metadata.audit_report_url === "string"
+                      ? metadata.audit_report_url
+                      : ""
+                  );
                 }
               }}
             >
@@ -149,7 +144,11 @@ function ProposalCard({
               variant="subtle"
               onClick={() => {
                 if (metadata.telegram_username) {
-                  openInNewTab(metadata.telegram_username);
+                  openInNewTab(
+                    typeof metadata.telegram_username === "string"
+                      ? metadata.telegram_username
+                      : ""
+                  );
                 }
               }}
             >
@@ -162,7 +161,11 @@ function ProposalCard({
               variant="subtle"
               onClick={() => {
                 if (metadata.twitter_url) {
-                  openInNewTab(metadata.twitter_url);
+                  openInNewTab(
+                    typeof metadata.twitter_url === "string"
+                      ? metadata.twitter_url
+                      : ""
+                  );
                 }
               }}
             >
@@ -199,102 +202,5 @@ function ProposalCard({
         </Button>
       )}
     </Card>
-  );
-}
-
-export default function Proposals() {
-  const [page, setPage] = useState(0);
-
-  const [opened, { open, close }] = useDisclosure(false);
-  const [comparisonInfo, setComparisonInfo] = useState<{
-    oldProjectId?: string;
-    newProjectInfo?: IProjectInfo;
-  }>({
-    oldProjectId: undefined,
-    newProjectInfo: undefined,
-  });
-
-  const proposals = whitelistQueries.useProposals({
-    fromIndex: limit * page,
-    limit,
-  });
-
-  const walletSelector = useAtomValue(walletSelectorAtom);
-
-  const guardians = whitelistQueries.useGuardians();
-
-  const currentWalletId =
-    walletSelector?.store.getState().accounts[0]?.accountId;
-
-  const isOneOfGuardians =
-    guardians.data?.includes(currentWalletId ?? "") ?? false;
-
-  return (
-    <>
-      <TableLayout
-        isFetching={proposals.isFetching}
-        isLoading={proposals.status === "pending"}
-        page={page + 1}
-        title="Pending Proposals"
-        onClickNext={() => {
-          if (proposals.data?.length !== 0) {
-            setPage((i) => {
-              return i + 1;
-            });
-          }
-        }}
-        onClickPrev={() => {
-          setPage((i) => {
-            if (i !== 0) {
-              return i - 1;
-            } else {
-              return i;
-            }
-          });
-        }}
-      >
-        <SimpleGrid
-          cols={{
-            xs: 1,
-            sm: 3,
-          }}
-        >
-          {proposals.status === "pending" && (
-            <>
-              <Skeleton h={170} />
-              <Skeleton h={170} />
-              <Skeleton h={170} />
-            </>
-          )}
-          {proposals.data?.map(([proposal_id, proposal_info]) => {
-            return (
-              <ProposalCard
-                key={proposal_id}
-                isOneOfGuardians={isOneOfGuardians}
-                proposalId={proposal_id}
-                proposalInfo={proposal_info}
-                currentWalletId={currentWalletId}
-                compare={() => {
-                  if (proposal_info.project_id) {
-                    setComparisonInfo({
-                      oldProjectId: proposal_info.project_id,
-                      newProjectInfo: proposal_info.project_info,
-                    });
-                    open();
-                  }
-                }}
-              />
-            );
-          })}
-        </SimpleGrid>
-      </TableLayout>
-
-      <ComparisonModal
-        oldProjectId={comparisonInfo.oldProjectId}
-        newProjectInfo={comparisonInfo.newProjectInfo}
-        isOpen={opened}
-        close={close}
-      />
-    </>
   );
 }

@@ -9,99 +9,69 @@ const SimpleForm = ({
   newProjectInfo: IProjectInfo;
   oldProjectInfo: IProjectInfo;
 }) => {
+  const metadataStructure = whitelistQueries.useMetadataStructure();
+
+  const oldMetadata = JSON.parse(oldProjectInfo.metadata);
+  const newMetadata = JSON.parse(newProjectInfo.metadata);
+
+  const contractIdIsDiff =
+    oldProjectInfo.contract_ids.toString() !==
+    newProjectInfo.contract_ids.toString();
+
   return (
     <>
-      <Input.Wrapper label="Audit report URL">
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>Old: </Text>
-          <Input
-            value={oldProjectInfo.audit_report_url ?? ""}
-            disabled
-            w="100%"
-          />
-        </Flex>
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>New: </Text>
-          <Input
-            value={newProjectInfo.audit_report_url ?? ""}
-            disabled
-            w="100%"
-          />
-        </Flex>
-      </Input.Wrapper>
+      {metadataStructure.data &&
+        metadataStructure.data.map((v) => {
+          let isDiff =
+            oldMetadata[v.key].toString() !== newMetadata[v.key].toString();
 
-      <Input.Wrapper label="Project Description">
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>Old: </Text>
-          <Input value={oldProjectInfo.description ?? ""} disabled w="100%" />
-        </Flex>
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>New: </Text>
-          <Input value={newProjectInfo.description ?? ""} disabled w="100%" />
-        </Flex>
-      </Input.Wrapper>
+          return (
+            <Input.Wrapper
+              label={v.label}
+              mb="xs"
+              px="xs"
+              bd={isDiff ? "1px solid yellow.4" : undefined}
+            >
+              <Flex gap="sm">
+                <Flex align={"center"} gap="xs" mb="xs" flex={1}>
+                  <Text w={40}>Old: </Text>
+                  <Input value={oldMetadata[v.key] ?? ""} w="100%" />
+                </Flex>
+                <Flex align={"center"} gap="xs" mb="xs" flex={1}>
+                  <Text w={40}>New: </Text>
+                  <Input value={newMetadata[v.key] ?? ""} w="100%" />
+                </Flex>
+              </Flex>
+            </Input.Wrapper>
+          );
+        })}
 
-      <Input.Wrapper label="Telegram Username">
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>Old: </Text>
-          <Input
-            value={oldProjectInfo.telegram_username ?? ""}
-            disabled
-            w="100%"
-          />
-        </Flex>
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>New: </Text>
-          <Input
-            value={newProjectInfo.telegram_username ?? ""}
-            disabled
-            w="100%"
-          />
-        </Flex>
-      </Input.Wrapper>
-
-      <Input.Wrapper label="Twitter URL">
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>Old: </Text>
-          <Input value={oldProjectInfo.twitter_url ?? ""} disabled w="100%" />
-        </Flex>
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>New: </Text>
-          <Input value={newProjectInfo.twitter_url ?? ""} disabled w="100%" />
-        </Flex>
-      </Input.Wrapper>
-
-      <Input.Wrapper label="Website URL">
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>Old: </Text>
-          <Input value={oldProjectInfo.website_url ?? ""} disabled w="100%" />
-        </Flex>
-        <Flex align={"center"} gap="xs" mb="xs">
-          <Text w={40}>New: </Text>
-          <Input value={newProjectInfo.website_url ?? ""} disabled w="100%" />
-        </Flex>
-      </Input.Wrapper>
-
-      <Input.Wrapper label="Contract IDs">
-        <Flex align={"center"} gap="xs" mb="xs" wrap={"wrap"}>
-          <Text w={40}>Old: </Text>
-          {oldProjectInfo.contract_ids.map((v) => {
-            return (
-              <Badge tt={"none"} color="gray" key={v}>
-                {v}
-              </Badge>
-            );
-          })}
-        </Flex>
-        <Flex align={"center"} gap="xs" mb="xs" wrap={"wrap"}>
-          <Text w={40}>New: </Text>
-          {newProjectInfo.contract_ids.map((v) => {
-            return (
-              <Badge tt={"none"} color="gray" key={v}>
-                {v}
-              </Badge>
-            );
-          })}
+      <Input.Wrapper
+        label="Contract IDs"
+        px="xs"
+        bd={contractIdIsDiff ? "1px solid yellow.4" : undefined}
+      >
+        <Flex gap="sm">
+          <Flex align={"center"} gap="xs" mb="xs" wrap={"wrap"} flex={1}>
+            <Text w={40}>Old: </Text>
+            {oldProjectInfo.contract_ids.map((v) => {
+              return (
+                <Badge tt={"none"} color="gray" key={v}>
+                  {v}
+                </Badge>
+              );
+            })}
+          </Flex>
+          <Flex align={"center"} gap="xs" mb="xs" wrap={"wrap"} flex={1}>
+            <Text w={40}>New: </Text>
+            {newProjectInfo.contract_ids.map((v) => {
+              return (
+                <Badge tt={"none"} color="gray" key={v}>
+                  {v}
+                </Badge>
+              );
+            })}
+          </Flex>
         </Flex>
       </Input.Wrapper>
     </>
@@ -120,11 +90,12 @@ export default function ComparisonModal({
   close: () => void;
 }) {
   const projectInfo = whitelistQueries.useProjectById({
-    projectId: oldProjectId,
+    projectId: oldProjectId || "",
+    enabled: oldProjectId !== undefined,
   });
 
   return (
-    <Modal opened={isOpen} title="Comparison" onClose={close}>
+    <Modal opened={isOpen} title="Comparison" onClose={close} size="xl">
       {projectInfo.status === "pending" && (
         <Flex justify={"center"}>
           <Loader size="sm" />

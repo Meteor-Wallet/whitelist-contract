@@ -82,15 +82,21 @@ export default function Projects() {
           const openInNewTab = (url: string) => {
             window.open(url, "_blank");
           };
-
+          const metadata = JSON.parse(project_info.metadata);
           return (
-            <Card shadow="sm" padding="xs" withBorder radius={"md"} key={project_id}>
+            <Card
+              shadow="sm"
+              padding="xs"
+              withBorder
+              radius={"md"}
+              key={project_id}
+            >
               <Group justify="space-between">
                 <Text fw={500}>{project_id}</Text>
               </Group>
 
               <Text size="sm" c="dimmed" mb={"sm"}>
-                {project_info.description}
+                {metadata.description}
               </Text>
               <HoverCard shadow="md" openDelay={500}>
                 <HoverCard.Target>
@@ -121,52 +127,52 @@ export default function Projects() {
                 flex={1}
               >
                 <Flex gap="xs" my={"xs"}>
-                  {project_info.website_url && (
+                  {metadata.website_url && (
                     <ActionIcon
                       size="lg"
                       variant="subtle"
                       onClick={() => {
-                        if (project_info.website_url) {
-                          openInNewTab(project_info.website_url);
+                        if (metadata.website_url) {
+                          openInNewTab(metadata.website_url);
                         }
                       }}
                     >
                       <IconLink />
                     </ActionIcon>
                   )}
-                  {project_info.audit_report_url && (
+                  {metadata.audit_report_url && (
                     <ActionIcon
                       size="lg"
                       variant="subtle"
                       onClick={() => {
-                        if (project_info.audit_report_url) {
-                          openInNewTab(project_info.audit_report_url);
+                        if (metadata.audit_report_url) {
+                          openInNewTab(metadata.audit_report_url);
                         }
                       }}
                     >
                       <IconMessageReport />
                     </ActionIcon>
                   )}
-                  {project_info.telegram_username && (
+                  {metadata.telegram_username && (
                     <ActionIcon
                       size="lg"
                       variant="subtle"
                       onClick={() => {
-                        if (project_info.telegram_username) {
-                          openInNewTab(project_info.telegram_username);
+                        if (metadata.telegram_username) {
+                          openInNewTab(metadata.telegram_username);
                         }
                       }}
                     >
                       <IconBrandTelegram />
                     </ActionIcon>
                   )}
-                  {project_info.twitter_url && (
+                  {metadata.twitter_url && (
                     <ActionIcon
                       size="lg"
                       variant="subtle"
                       onClick={() => {
-                        if (project_info.twitter_url) {
-                          openInNewTab(project_info.twitter_url);
+                        if (metadata.twitter_url) {
+                          openInNewTab(metadata.twitter_url);
                         }
                       }}
                     >
@@ -182,7 +188,24 @@ export default function Projects() {
                 onClick={() => {
                   browserQueryClient?.setQueryData(
                     [
-                      EQueryKeys.APPROVED_PROJECTS,
+                      EQueryKeys.APPROVED_PROJECTS_BY_ID,
+                      { projectId: project_id, network: CURRENT_NEAR_NETWORK },
+                    ],
+                    project_info
+                  );
+                  router.push(`/project?project_id=${project_id}`);
+                }}
+                variant="light"
+              >
+                View
+              </Button>
+              <Button
+                mt={"sm"}
+                w="100%"
+                onClick={() => {
+                  browserQueryClient?.setQueryData(
+                    [
+                      EQueryKeys.APPROVED_PROJECTS_BY_ID,
                       { projectId: project_id, network: CURRENT_NEAR_NETWORK },
                     ],
                     project_info

@@ -40,7 +40,7 @@ const useVoteProposal = () => {
         throw new Error("Wallet selector is not initialized.");
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, proposal_id) => {
       browserQueryClient?.invalidateQueries({
         queryKey: [EQueryKeys.APPROVED_CONTRACTS],
       });
@@ -49,6 +49,12 @@ const useVoteProposal = () => {
       });
       browserQueryClient?.invalidateQueries({
         queryKey: [EQueryKeys.PROPOSALS],
+      });
+      browserQueryClient?.invalidateQueries({
+        queryKey: [
+          EQueryKeys.PROPOSAL_BY_ID,
+          { network: CURRENT_NEAR_NETWORK, proposalId: proposal_id },
+        ],
       });
     },
     onError: (err) => {
@@ -92,9 +98,15 @@ const useWithdrawVoteOnProposal = () => {
         throw new Error("Wallet selector is not initialized.");
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, proposal_id) => {
       browserQueryClient?.invalidateQueries({
         queryKey: [EQueryKeys.PROPOSALS],
+      });
+      browserQueryClient?.invalidateQueries({
+        queryKey: [
+          EQueryKeys.PROPOSAL_BY_ID,
+          { network: CURRENT_NEAR_NETWORK, proposalId: proposal_id },
+        ],
       });
     },
     onError: (err) => {
@@ -111,10 +123,14 @@ const useAddProject = () => {
   const walletSelector = useAtomValue(walletSelectorAtom);
 
   return useMutation({
-    mutationFn: async ({ project_info }: { project_info: Omit<IProjectInfo, 'pending_proposals'> }) => {
+    mutationFn: async ({
+      project_info,
+    }: {
+      project_info: Omit<IProjectInfo, "pending_proposals">;
+    }) => {
       if (walletSelector) {
         const wallet = await walletSelector.wallet();
-        const {contract_ids, metadata} = project_info
+        const { contract_ids, metadata } = project_info;
         if (wallet) {
           await wallet.signAndSendTransaction({
             receiverId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
@@ -125,7 +141,7 @@ const useAddProject = () => {
                   methodName: "add_project",
                   args: {
                     contract_ids,
-                    metadata: metadata
+                    metadata: metadata,
                   },
                   gas: utils.format.parseNearAmount("0.00000000003")!,
                   deposit: utils.format.parseNearAmount("1")!,
@@ -163,7 +179,7 @@ const useUpdateProject = () => {
       project_info,
       project_id,
     }: {
-      project_info: Omit<IProjectInfo, 'pending_proposals'>;
+      project_info: Omit<IProjectInfo, "pending_proposals">;
       project_id: string;
     }) => {
       if (walletSelector) {
@@ -197,6 +213,9 @@ const useUpdateProject = () => {
     onSuccess: () => {
       browserQueryClient?.invalidateQueries({
         queryKey: [EQueryKeys.PROPOSALS],
+      });
+      browserQueryClient?.invalidateQueries({
+        queryKey: [EQueryKeys.APPROVED_PROJECTS],
       });
     },
     onError: (err) => {

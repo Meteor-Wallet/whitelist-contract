@@ -28,8 +28,8 @@ const ProposalForm = () => {
     kind === EProjectKind.UPDATE && projectId !== null ? "update" : "new";
 
   const oldProjectInfo = whitelistQueries.useProjectById({
-    enabled: type === "update" && metadataStructure.status === "success",
-    projectId: projectId ?? undefined,
+    enabled: type === "update" && metadataStructure.status === "success" && projectId !== null,
+    projectId: projectId ?? "",
   });
 
   const addProject = whitelistMutate.useAddProject();

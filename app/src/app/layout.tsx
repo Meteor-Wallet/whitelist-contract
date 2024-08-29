@@ -8,6 +8,7 @@ import { Provider as JotaiProvider } from "jotai";
 import QueryProvider from "../providers/QueryProvider";
 import WalletSelectorInitializer from "./WalletSelectorInitializer";
 import { Notifications } from "@mantine/notifications";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 export const metadata: Metadata = {
   title: "Near Whitelist",
   description: "Near Whitelist - maintained by Meteor.",
@@ -25,6 +26,7 @@ export default function RootLayout({
       </head>
       <body>
         <QueryProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
           <JotaiProvider>
             <MantineProvider defaultColorScheme="dark">
               <Notifications position="bottom-center" />
