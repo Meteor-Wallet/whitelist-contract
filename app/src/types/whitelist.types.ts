@@ -2,6 +2,7 @@ export interface IProjectInfo {
   metadata: string;
   pending_proposals: string[];
   contract_ids: string[];
+  project_id: string;
 }
 
 export enum EProjectKind {

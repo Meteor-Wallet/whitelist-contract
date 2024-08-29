@@ -130,7 +130,7 @@ const useAddProject = () => {
     }) => {
       if (walletSelector) {
         const wallet = await walletSelector.wallet();
-        const { contract_ids, metadata } = project_info;
+        const { contract_ids, metadata, project_id } = project_info;
         if (wallet) {
           await wallet.signAndSendTransaction({
             receiverId: CONTRACT_ID_BY_NETWORK[CURRENT_NEAR_NETWORK],
@@ -142,6 +142,7 @@ const useAddProject = () => {
                   args: {
                     contract_ids,
                     metadata: metadata,
+                    project_id
                   },
                   gas: utils.format.parseNearAmount("0.00000000003")!,
                   deposit: utils.format.parseNearAmount("1")!,

@@ -26,11 +26,7 @@ enum EValueType {
 #[near(serializers=[borsh, json])]
 pub struct OldProjectInfo {
     contract_ids: HashSet<AccountId>,
-    twitter_url: Option<String>,
-    audit_report_url: Option<String>,
-    telegram_username: Option<String>,
-    description: Option<String>,
-    website_url: Option<String>,
+    metadata: String,
     pending_proposals: HashSet<String>
 }
 
@@ -48,7 +44,8 @@ pub struct OldProposalInfo {
 pub struct ProjectInfo {
     contract_ids: HashSet<AccountId>,
     metadata: String,
-    pending_proposals: HashSet<String>
+    pending_proposals: HashSet<String>,
+    project_id: String,
 }
 
 #[near(serializers=[borsh, json])]
@@ -121,8 +118,6 @@ impl Contract {
         old_state.approved_projects.clear();
         old_state.proposals.clear();
 
-        log!("I hope it is cleared now");
-
         Self {
             contract_project_index: IterableMap::new(EStorageKey::ApprovedContracts),
             proposals: IterableMap::new(EStorageKey::Proposals),
@@ -171,10 +166,27 @@ impl Contract {
         &mut self,
         contract_ids: HashSet<AccountId>,
         metadata: String,
+        project_id: String,
     ) -> Option<String> {
         if env::attached_deposit() != NearToken::from_near(1) {
             panic!("Creating proposal requires depositing 1 NEAR.")
         }
+
+        if project_id.len() == 0 {
+            panic!("Project id length must be greater than 0")
+        }
+
+        if !project_id.chars().all(char::is_alphanumeric) {
+            panic!("Project id must be alphanumeric")
+        }
+
+        let existing_project_option =
+            self.approved_projects.get_mut(&project_id.clone());
+
+        if existing_project_option.is_some() {
+            panic!("Project id is occupied, please use another project id.")
+        }
+
         serde_json::from_str::<ProjectMetadata>(&metadata).expect("Incorrect metadata structure");
 
         let (new_running_id, proposal_id) = Contract::generate_id(self.running_id);
@@ -185,6 +197,7 @@ impl Contract {
                 contract_ids,
                 metadata,
                 pending_proposals: HashSet::new(),
+                project_id
             },
             proposed_by: env::predecessor_account_id(),
             kind: EProposalKind::NEW,
@@ -222,6 +235,7 @@ impl Contract {
                     contract_ids,
                     metadata,
                     pending_proposals: HashSet::new(),
+                    project_id: project_id.clone(),
                 },
                 proposed_by: env::predecessor_account_id(),
                 project_id: Option::from(project_id.clone()),
@@ -264,28 +278,34 @@ impl Contract {
                             contract_ids: proposal.project_info.contract_ids.clone(),
                             metadata: proposal.project_info.metadata.clone(),
                             pending_proposals: HashSet::new(),
+                            project_id: proposal.project_info.project_id.clone(),
                         };
 
                         match proposal.kind {
                             EProposalKind::NEW => {
-                                let (new_running_id, project_id) =
-                                    Contract::generate_id(self.running_id);
-                                self.running_id = new_running_id;
+                                let existing_project_option =
+                                    self.approved_projects.get_mut(&project_info.project_id.clone());
+                                match existing_project_option {
+                                    None => {
+                                        for contract_id in proposal.project_info.contract_ids.iter() {
+                                            let contract_id_option =
+                                                self.contract_project_index.get(&contract_id.clone());
+                                            match contract_id_option {
+                                                None => {
+                                                    self.contract_project_index.insert(contract_id.clone(), project_info.project_id.clone());
+                                                }
+                                                Some(associated_project_id) => {
+                                                    log!("Skipping {}, as it is paired with {}", contract_id, associated_project_id);
+                                                }
+                                            }
+                                        }
 
-                                for contract_id in proposal.project_info.contract_ids.iter() {
-                                    let contract_id_option =
-                                        self.contract_project_index.get(&contract_id.clone());
-                                    match contract_id_option {
-                                        None => {
-                                            self.contract_project_index.insert(contract_id.clone(), project_id.clone());
-                                        }
-                                        Some(associated_project_id) => {
-                                            log!("Skipping {}, as it is paired with {}", contract_id, associated_project_id);
-                                        }
+                                        self.approved_projects.insert(project_info.project_id.clone(), project_info);
+                                    }
+                                    Some(_) => {
+                                        log!("Skipping add project as the project id is occupied.");
                                     }
                                 }
-
-                                self.approved_projects.insert(project_id, project_info);
                             }
                             EProposalKind::UPDATE => {
                                 let project_id_option = proposal.project_id.clone();

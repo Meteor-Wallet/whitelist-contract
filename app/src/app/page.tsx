@@ -32,8 +32,10 @@ import { useState } from "react";
 import { whitelistQueries } from "@/hooks/whitelistQueries";
 import { notifications } from "@mantine/notifications";
 import classes from "./page.module.css";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter()
   const { toggleColorScheme } = useMantineColorScheme({
     keepTransitions: true,
   });
@@ -47,6 +49,7 @@ export default function Home() {
   const [walletSelectorModal] = useAtom(walletSelectorModalAtom);
 
   const [contractId, setContractId] = useState("");
+  const [projectId, setProjectId] = useState("");
   const [associatedProjectId, setAssociatedProjectId] = useState("");
 
   const isContractWhitelisted = whitelistQueries.useIsContractWhitelisted({
@@ -73,6 +76,10 @@ export default function Home() {
       setAssociatedProjectId(projectIdPayload.data);
     }
   };
+
+  const goToProject = async () => {
+    router.push(`/project?project_id=${projectId}`)
+  }
 
   return (
     <>
@@ -189,6 +196,28 @@ export default function Home() {
             <Button variant="transparent">{associatedProjectId}</Button>
           </Link>
         )}
+      </Flex>
+      <Divider />
+
+      <Text mt="sm">Go to project page by project ID</Text>
+      <Flex gap="sm" align={"flex-end"}>
+        <Input.Wrapper label="Project ID">
+          <Input
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                goToProject();
+              }
+            }}
+          />
+        </Input.Wrapper>
+        <Button
+          loading={isContractWhitelisted.isFetching}
+          onClick={goToProject}
+        >
+          Go to Project
+        </Button>
       </Flex>
     </>
   );

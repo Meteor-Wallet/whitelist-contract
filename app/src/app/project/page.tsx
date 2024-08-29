@@ -5,7 +5,15 @@ import { EQueryKeys } from "@/constant/queryKeys";
 import { whitelistQueries } from "@/hooks/whitelistQueries";
 import { walletSelectorAtom } from "@/jotai/wallet.jotai";
 import { browserQueryClient } from "@/providers/QueryProvider";
-import { Button, Flex, Loader, SimpleGrid, Text, Title } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Flex,
+  Loader,
+  SimpleGrid,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useAtomValue } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -26,10 +34,22 @@ const ProjectDetails = () => {
   const currentWalletId =
     walletSelector?.store.getState().accounts[0]?.accountId;
 
-  const project = whitelistQueries.useProjectById({ projectId, enabled: projectId !== null });
+  const project = whitelistQueries.useProjectById({
+    projectId,
+    enabled: projectId !== null,
+  });
   const metadataStructure = whitelistQueries.useMetadataStructure();
 
   const metadata = JSON.parse(project.data?.metadata ?? JSON.stringify({}));
+
+  if (!project.isFetching && !project.data) {
+    return (
+      <>
+        <Title>Project Details #{projectId}</Title>
+        <Text>Project not found</Text>
+      </>
+    );
+  }
 
   return (
     <>
@@ -62,7 +82,7 @@ const ProjectDetails = () => {
         <Text fw="bold" size="lg">
           Description
         </Text>
-        <Text c="dimmed">{metadata["description"]}</Text>
+        <Text c="dimmed">{metadata["description"] || "-"}</Text>
       </Flex>
       <Flex gap="sm">
         {metadataStructure.data &&
@@ -74,13 +94,33 @@ const ProjectDetails = () => {
                   <Text fw="bold" size="lg">
                     {v.label}
                   </Text>
-                  <Text c="dimmed">{metadata?.[v.key]?.toString()}</Text>
+                  <Text c="dimmed">{metadata?.[v.key]?.toString() || "-"}</Text>
                 </Flex>
               );
             })}
       </Flex>
 
-      <Title order={2}>Pending Proposal</Title>
+      <Title mt="sm" order={2}>
+        Contracts
+      </Title>
+      {project.data &&
+        project.data.contract_ids.map((contract_id) => {
+          return (
+            <Badge
+              tt={"none"}
+              size="lg"
+              variant="gradient"
+              key={contract_id}
+              gradient={{ from: "blue", to: "cyan", deg: 90 }}
+            >
+              {contract_id}
+            </Badge>
+          );
+        })}
+
+      <Title mt="sm" order={2}>
+        Pending Proposal
+      </Title>
       <SimpleGrid
         cols={{
           xs: 1,

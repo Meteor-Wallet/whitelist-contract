@@ -12,6 +12,7 @@ interface IForm {
   metadata: {
     [key: string]: string | string[];
   };
+  project_id: string;
 }
 
 const ProposalForm = () => {
@@ -28,7 +29,10 @@ const ProposalForm = () => {
     kind === EProjectKind.UPDATE && projectId !== null ? "update" : "new";
 
   const oldProjectInfo = whitelistQueries.useProjectById({
-    enabled: type === "update" && metadataStructure.status === "success" && projectId !== null,
+    enabled:
+      type === "update" &&
+      metadataStructure.status === "success" &&
+      projectId !== null,
     projectId: projectId ?? "",
   });
 
@@ -38,6 +42,7 @@ const ProposalForm = () => {
   const [form, setForm] = useState<IForm>({
     metadata: {},
     contract_ids: [],
+    project_id: "",
   });
 
   useEffect(() => {
@@ -89,6 +94,19 @@ const ProposalForm = () => {
       {type === "update" && projectId && (
         <Input.Wrapper label="Project ID">
           <Input value={projectId} disabled />
+        </Input.Wrapper>
+      )}
+      {type === "new" && (
+        <Input.Wrapper label="Project ID">
+          <Input
+            value={form.project_id}
+            onChange={(e) =>
+              setForm((s) => ({
+                ...s,
+                project_id: e.target.value,
+              }))
+            }
+          />
         </Input.Wrapper>
       )}
       {metadataStructure.data &&
@@ -153,6 +171,7 @@ const ProposalForm = () => {
                 project_info: {
                   contract_ids: form.contract_ids,
                   metadata: JSON.stringify(form.metadata),
+                  project_id: form.project_id
                 },
               });
             } else {
@@ -162,6 +181,7 @@ const ProposalForm = () => {
                   project_info: {
                     contract_ids: form.contract_ids,
                     metadata: JSON.stringify(form.metadata),
+                    project_id: projectId
                   },
                 });
               }
