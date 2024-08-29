@@ -1,12 +1,13 @@
 use near_sdk::store::{IterableMap};
 use near_sdk::{env, log, near, AccountId, BorshStorageKey, NearToken, Promise};
 use std::collections::HashSet;
+use near_sdk::serde_json;
 
 #[near]
 #[derive(BorshStorageKey)]
 enum EStorageKey {
     ApprovedProjects,
-    ApprovedContractsWithCount,
+    ApprovedContracts,
     Proposals,
 }
 
@@ -17,8 +18,41 @@ enum EProposalKind {
 }
 
 #[near(serializers=[borsh, json])]
+enum EValueType {
+    STRING,
+    ARRAY,
+}
+
+#[near(serializers=[borsh, json])]
+pub struct OldProjectInfo {
+    contract_ids: HashSet<AccountId>,
+    twitter_url: Option<String>,
+    audit_report_url: Option<String>,
+    telegram_username: Option<String>,
+    description: Option<String>,
+    website_url: Option<String>,
+    pending_proposals: HashSet<String>
+}
+
+#[near(serializers=[borsh, json])]
+pub struct OldProposalInfo {
+    project_info: OldProjectInfo,
+    kind: EProposalKind,
+    // project_id will be null when kind is NEW
+    project_id: Option<String>,
+    votes: HashSet<AccountId>,
+    proposed_by: AccountId,
+}
+
+#[near(serializers=[borsh, json])]
 pub struct ProjectInfo {
     contract_ids: HashSet<AccountId>,
+    metadata: String,
+    pending_proposals: HashSet<String>
+}
+
+#[near(serializers=[borsh, json])]
+pub struct ProjectMetadata {
     twitter_url: Option<String>,
     audit_report_url: Option<String>,
     telegram_username: Option<String>,
@@ -40,17 +74,35 @@ pub struct ProposalInfo {
 #[near(contract_state)]
 pub struct Contract {
     guardians: HashSet<AccountId>,
-    approved_contracts: IterableMap<AccountId, u32>,
+    contract_project_index: IterableMap<AccountId, String>,
     proposals: IterableMap<String, ProposalInfo>,
     approved_projects: IterableMap<String, ProjectInfo>,
     running_id: u32,
+}
+
+#[near(serializers=[borsh])]
+
+pub struct OldContract {
+    guardians: HashSet<AccountId>,
+    contract_project_index: IterableMap<AccountId, String>,
+    proposals: IterableMap<String, OldProposalInfo>,
+    approved_projects: IterableMap<String, OldProjectInfo>,
+    running_id: u32,
+}
+
+#[near(serializers=[borsh, json])]
+pub struct MetadataStructure {
+    key: String,
+    value_type: EValueType,
+    is_required: bool,
+    label: String,
 }
 
 impl Default for Contract {
     fn default() -> Self {
         Self {
             guardians: HashSet::new(),
-            approved_contracts: IterableMap::new(EStorageKey::ApprovedContractsWithCount),
+            contract_project_index: IterableMap::new(EStorageKey::ApprovedContracts),
             proposals: IterableMap::new(EStorageKey::Proposals),
             approved_projects: IterableMap::new(EStorageKey::ApprovedProjects),
             running_id: 0,
@@ -60,6 +112,25 @@ impl Default for Contract {
 
 #[near]
 impl Contract {
+
+    #[private]
+    #[init(ignore_state)]
+    pub fn migrate() -> Self {
+        let mut old_state: OldContract = env::state_read().expect("failed");
+        old_state.contract_project_index.clear();
+        old_state.approved_projects.clear();
+        old_state.proposals.clear();
+
+        log!("I hope it is cleared now");
+
+        Self {
+            contract_project_index: IterableMap::new(EStorageKey::ApprovedContracts),
+            proposals: IterableMap::new(EStorageKey::Proposals),
+            approved_projects: IterableMap::new(EStorageKey::ApprovedProjects),
+            running_id: old_state.running_id,
+            guardians: old_state.guardians
+        }
+    }
 
     #[private]
     pub fn add_guardian(&mut self, account_id: AccountId) {
@@ -99,15 +170,13 @@ impl Contract {
     pub fn add_project(
         &mut self,
         contract_ids: HashSet<AccountId>,
-        twitter_url: Option<String>,
-        audit_report_url: Option<String>,
-        telegram_username: Option<String>,
-        description: Option<String>,
-        website_url: Option<String>,
+        metadata: String,
     ) -> Option<String> {
         if env::attached_deposit() != NearToken::from_near(1) {
             panic!("Creating proposal requires depositing 1 NEAR.")
         }
+
+        serde_json::from_str::<ProjectMetadata>(&metadata).expect("Incorrect metadata structure");
 
         let (new_running_id, proposal_id) = Contract::generate_id(self.running_id);
         self.running_id = new_running_id;
@@ -115,11 +184,8 @@ impl Contract {
         let proposal = ProposalInfo {
             project_info: ProjectInfo {
                 contract_ids,
-                twitter_url,
-                audit_report_url,
-                telegram_username,
-                description,
-                website_url,
+                metadata,
+                pending_proposals: HashSet::new(),
             },
             proposed_by: env::predecessor_account_id(),
             kind: EProposalKind::NEW,
@@ -140,15 +206,13 @@ impl Contract {
         &mut self,
         project_id: String,
         contract_ids: HashSet<AccountId>,
-        twitter_url: Option<String>,
-        audit_report_url: Option<String>,
-        telegram_username: Option<String>,
-        description: Option<String>,
-        website_url: Option<String>,
-    ) -> Option<String> {
+        metadata: String
+    ) -> String {
         if env::attached_deposit() != NearToken::from_near(1) {
             panic!("Creating proposal requires depositing 1 NEAR.")
         }
+
+        serde_json::from_str::<ProjectMetadata>(&metadata).expect("Incorrect metadata structure");
 
         if self.approved_projects.contains_key(&project_id) {
             let (new_running_id, proposal_id) = Contract::generate_id(self.running_id);
@@ -157,23 +221,25 @@ impl Contract {
             let proposal = ProposalInfo {
                 project_info: ProjectInfo {
                     contract_ids,
-                    twitter_url,
-                    audit_report_url,
-                    telegram_username,
-                    description,
-                    website_url,
+                    metadata,
+                    pending_proposals: HashSet::new(),
                 },
                 proposed_by: env::predecessor_account_id(),
-                project_id: Option::from(project_id),
+                project_id: Option::from(project_id.clone()),
                 kind: EProposalKind::UPDATE,
                 votes: HashSet::new(),
             };
 
             if self.proposals.contains_key(&proposal_id) {
-                panic!("id collision, please try again later");
+                panic!("proposal id collision, please try again later");
             } else {
                 self.proposals.insert(proposal_id.clone(), proposal);
-                Option::from(proposal_id)
+                let project_option = self.approved_projects.get_mut(&project_id.clone());
+                if project_option.is_some() {
+                    let project = project_option.unwrap();
+                    project.pending_proposals.insert(proposal_id.clone());
+                }
+                proposal_id
             }
         } else {
             panic!("Project not found");
@@ -195,34 +261,30 @@ impl Contract {
                             .transfer(NearToken::from_near(1));
                         log!("Refunded 1 NEAR to {}", proposal.proposed_by);
 
-                        let project_info = ProjectInfo {
+                        let mut project_info = ProjectInfo {
                             contract_ids: proposal.project_info.contract_ids.clone(),
-                            twitter_url: proposal.project_info.twitter_url.clone(),
-                            audit_report_url: proposal.project_info.audit_report_url.clone(),
-                            telegram_username: proposal.project_info.telegram_username.clone(),
-                            description: proposal.project_info.description.clone(),
-                            website_url: proposal.project_info.website_url.clone(),
+                            metadata: proposal.project_info.metadata.clone(),
+                            pending_proposals: HashSet::new(),
                         };
 
                         match proposal.kind {
                             EProposalKind::NEW => {
-                                for contract_id in proposal.project_info.contract_ids.iter() {
-                                    let contract_id_count_option =
-                                        self.approved_contracts.get(&contract_id.clone());
-                                    match contract_id_count_option {
-                                        None => {
-                                            self.approved_contracts.insert(contract_id.clone(), 1);
-                                        }
-                                        Some(contract_id_count) => {
-                                            self.approved_contracts
-                                                .insert(contract_id.clone(), contract_id_count + 1);
-                                        }
-                                    }
-                                }
-
                                 let (new_running_id, project_id) =
                                     Contract::generate_id(self.running_id);
                                 self.running_id = new_running_id;
+
+                                for contract_id in proposal.project_info.contract_ids.iter() {
+                                    let contract_id_option =
+                                        self.contract_project_index.get(&contract_id.clone());
+                                    match contract_id_option {
+                                        None => {
+                                            self.contract_project_index.insert(contract_id.clone(), project_id.clone());
+                                        }
+                                        Some(associated_project_id) => {
+                                            log!("Skipping {}, as it is paired with {}", contract_id, associated_project_id);
+                                        }
+                                    }
+                                }
 
                                 self.approved_projects.insert(project_id, project_info);
                             }
@@ -243,45 +305,28 @@ impl Contract {
                                                 for contract_id in
                                                     existing_project.contract_ids.iter()
                                                 {
-                                                    let contract_id_count_option = self
-                                                        .approved_contracts
-                                                        .get(&contract_id.clone());
-                                                    match contract_id_count_option {
-                                                        None => {}
-                                                        Some(contract_id_count) => {
-                                                            if contract_id_count.clone() == 1 {
-                                                                self.approved_contracts
-                                                                    .remove(&contract_id.clone());
-                                                            } else {
-                                                                self.approved_contracts.insert(
-                                                                    contract_id.clone(),
-                                                                    contract_id_count - 1,
-                                                                );
-                                                            }
-                                                        }
-                                                    }
+                                                    self.contract_project_index.remove(contract_id);
                                                 }
 
                                                 for contract_id in
                                                     proposal.project_info.contract_ids.iter()
                                                 {
                                                     let contract_id_count_option = self
-                                                        .approved_contracts
+                                                        .contract_project_index
                                                         .get(&contract_id.clone());
                                                     match contract_id_count_option {
                                                         None => {
-                                                            self.approved_contracts
-                                                                .insert(contract_id.clone(), 1);
+                                                            self.contract_project_index.insert(contract_id.clone(), project_id.clone());
                                                         }
-                                                        Some(contract_id_count) => {
-                                                            self.approved_contracts.insert(
-                                                                contract_id.clone(),
-                                                                contract_id_count + 1,
-                                                            );
+                                                        Some(associated_project_id) => {
+                                                            log!("Skipping {}, as it is paired with {}", contract_id, associated_project_id);
                                                         }
                                                     }
                                                 }
+                                                
 
+                                                project_info.pending_proposals = existing_project.pending_proposals.clone();
+                                                project_info.pending_proposals.remove(&proposal_id);
                                                 self.approved_projects
                                                     .insert(project_id, project_info);
                                             }
@@ -326,7 +371,7 @@ impl Contract {
     }
 
     pub fn check_contract_whitelisted(self, contract_id: AccountId) -> bool {
-        self.approved_contracts.contains_key(&contract_id)
+        self.contract_project_index.contains_key(&contract_id)
     }
 
     pub fn list_projects(&self, from_index: i32, limit: i32) -> Vec<(&String, &ProjectInfo)> {
@@ -347,8 +392,8 @@ impl Contract {
             .collect()
     }
 
-    pub fn list_contracts(&self, from_index: i32, limit: i32) -> Vec<(&AccountId, &u32)> {
-        self.approved_contracts
+    pub fn list_contracts(&self, from_index: i32, limit: i32) -> Vec<(&AccountId, &String)> {
+        self.contract_project_index
             .iter()
             .rev()
             .skip(from_index as usize)
@@ -356,7 +401,50 @@ impl Contract {
             .collect()
     }
 
+    pub fn get_project_id_by_contract_id(&self, contract_id: AccountId) -> Option<&String> {
+        self.contract_project_index.get(&contract_id)
+    }
+
     pub fn get_project_by_id(&self, project_id: String) -> Option<&ProjectInfo> {
         self.approved_projects.get(&project_id)
+    }
+
+    pub fn get_proposal_by_id(&self, proposal_id: String) -> Option<&ProposalInfo> {
+        self.proposals.get(&proposal_id)
+    }
+
+    pub fn get_metadata_structure() -> Vec<MetadataStructure>{
+        Vec::from([
+            MetadataStructure {
+                key: "description".to_string(),
+                value_type: EValueType::STRING,
+                is_required: false,
+                label: "Description".to_string()
+            },
+            MetadataStructure {
+                key: "telegram_username".to_string(),
+                value_type: EValueType::STRING,
+                is_required: false,
+                label: "Telegram Username".to_string()
+            },
+            MetadataStructure {
+                key: "twitter_url".to_string(),
+                value_type: EValueType::STRING,
+                is_required: false,
+                label: "Twitter URL".to_string()
+            },
+            MetadataStructure {
+                key: "website_url".to_string(),
+                value_type: EValueType::STRING,
+                is_required: false,
+                label: "Website URL".to_string()
+            },
+            MetadataStructure {
+                key: "audit_report_url".to_string(),
+                value_type: EValueType::STRING,
+                is_required: false,
+                label: "Audit Report URL".to_string()
+            },
+        ])
     }
 }
