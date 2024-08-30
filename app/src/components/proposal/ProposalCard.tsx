@@ -88,7 +88,7 @@ export default function ProposalCard({
           <List size="sm">
             {Object.entries(rest).map(([key, value]) => {
               return (
-                <List.Item>
+                <List.Item key={key}>
                   {key}: {value}
                 </List.Item>
               );

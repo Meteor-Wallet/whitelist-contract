@@ -27,6 +27,7 @@ const SimpleForm = ({
 
           return (
             <Input.Wrapper
+              key={v.key}
               label={v.label}
               mb="xs"
               px="xs"

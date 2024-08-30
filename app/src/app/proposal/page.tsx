@@ -118,6 +118,7 @@ const ProposalForm = () => {
             }
             return (
               <TagsInput
+                key={structure.key}
                 label={structure.label}
                 data={[]}
                 value={value}
@@ -132,7 +133,7 @@ const ProposalForm = () => {
             );
           }
           return (
-            <Input.Wrapper label={structure.label}>
+            <Input.Wrapper label={structure.label} key={structure.key}>
               <Input
                 value={form.metadata[structure.key] ?? ""}
                 onChange={(e) =>

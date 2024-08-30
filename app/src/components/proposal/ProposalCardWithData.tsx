@@ -38,6 +38,10 @@ export default function ProposalCardWithData({
     return <Skeleton h={170} />;
   }
 
+  if (!proposalInfo.data) {
+    return <></>;
+  }
+
   return (
     <>
       <ProposalCard
@@ -46,7 +50,7 @@ export default function ProposalCardWithData({
         proposalId={proposal_id}
         proposalInfo={proposalInfo.data}
         compare={() => {
-          if (proposalInfo.data.project_id) {
+          if (proposalInfo.data?.project_id) {
             setComparisonInfo({
               oldProjectId: proposalInfo.data.project_id,
               newProjectInfo: proposalInfo.data.project_info,

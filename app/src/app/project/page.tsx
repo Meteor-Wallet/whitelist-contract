@@ -35,7 +35,7 @@ const ProjectDetails = () => {
     walletSelector?.store.getState().accounts[0]?.accountId;
 
   const project = whitelistQueries.useProjectById({
-    projectId,
+    projectId: projectId ?? "",
     enabled: projectId !== null,
   });
   const metadataStructure = whitelistQueries.useMetadataStructure();
@@ -90,7 +90,7 @@ const ProjectDetails = () => {
             .filter((e) => e.key !== "description")
             .map((v) => {
               return (
-                <Flex direction={"column"}>
+                <Flex direction={"column"} key={v.key}>
                   <Text fw="bold" size="lg">
                     {v.label}
                   </Text>
@@ -129,7 +129,7 @@ const ProjectDetails = () => {
       >
         {project.data &&
           project.data.pending_proposals.map((v) => {
-            return <ProposalCardWithData proposal_id={v} />;
+            return <ProposalCardWithData proposal_id={v} key={v}/>;
           })}
       </SimpleGrid>
     </>
