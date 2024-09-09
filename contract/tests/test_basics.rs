@@ -27,7 +27,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .args_json(json!({
             "contract_ids": ["aa-harvest-moon.near"],
             "metadata": "{}",
-            "project_id": "meteorHarvestMoon"
+            "project_id": "Meteor Harvest Moon™"
         }))
         .transact()
         .await?;
@@ -39,7 +39,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .args_json(json!({
             "contract_ids": ["aa-harvest-moon.near"],
             "metadata": "{}",
-            "project_id": "meteorHarvestMoon"
+            "project_id": "Meteor Harvest Moon™"
         }))
         .deposit(NearToken::from_near(5))
         .transact()
@@ -51,7 +51,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .args_json(json!({
             "contract_ids": ["aa-harvest-moon.near"],
             "metadata": "{}",
-            "project_id": "meteorHarvestMoon"
+            "project_id": "Meteor Harvest Moon™"
         }))
         .deposit(NearToken::from_near(1))
         .transact()

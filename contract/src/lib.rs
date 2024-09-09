@@ -176,10 +176,6 @@ impl Contract {
             panic!("Project id length must be greater than 0")
         }
 
-        if !project_id.chars().all(char::is_alphanumeric) {
-            panic!("Project id must be alphanumeric")
-        }
-
         let existing_project_option =
             self.approved_projects.get_mut(&project_id.clone());
 
